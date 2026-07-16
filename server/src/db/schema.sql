@@ -22,8 +22,6 @@ CREATE TABLE IF NOT EXISTS settings (
   warning_color TEXT NOT NULL DEFAULT '#D97706',
   danger_color TEXT NOT NULL DEFAULT '#DC2626',
   default_theme TEXT NOT NULL DEFAULT 'light',
-  public_dashboard_enabled INTEGER NOT NULL DEFAULT 1,
-  public_dashboard_password_hash TEXT,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

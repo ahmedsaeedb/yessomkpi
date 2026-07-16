@@ -12,14 +12,19 @@ export function seedDatabase() {
       `INSERT INTO users (username, password_hash, full_name, role) VALUES (?, ?, ?, ?)`
     ).run(config.adminUsername, passwordHash, 'مدير النظام', 'admin');
     console.log(`✔ تم إنشاء المستخدم الإداري: ${config.adminUsername}`);
+
+    const viewerPasswordHash = bcrypt.hashSync(config.viewerPassword, 10);
+    db.prepare(
+      `INSERT INTO users (username, password_hash, full_name, role) VALUES (?, ?, ?, ?)`
+    ).run(config.viewerUsername, viewerPasswordHash, 'مستخدم عرض', 'viewer');
+    console.log(`✔ تم إنشاء مستخدم عرض تجريبي: ${config.viewerUsername}`);
   }
 
   const settingsCount = (db.prepare('SELECT COUNT(*) as c FROM settings').get() as { c: number }).c;
   if (settingsCount === 0) {
-    const publicPasswordHash = bcrypt.hashSync(config.publicDashboardPassword, 10);
     db.prepare(
-      `INSERT INTO settings (id, company_name, system_name, primary_color, secondary_color, success_color, warning_color, danger_color, public_dashboard_password_hash)
-       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO settings (id, company_name, system_name, primary_color, secondary_color, success_color, warning_color, danger_color)
+       VALUES (1, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       'يسوم للمحاماة',
       'مؤشرات أداء قسم التسويق',
@@ -27,8 +32,7 @@ export function seedDatabase() {
       '#C9A24B',
       '#15803D',
       '#D97706',
-      '#DC2626',
-      publicPasswordHash
+      '#DC2626'
     );
     console.log('✔ تم إنشاء إعدادات النظام الافتراضية');
   }

@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { listKpis, getKpi, createKpi, updateKpi, deleteKpi } from '../controllers/kpis.controller.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(requireAuth, requireAdmin);
 router.get('/', asyncHandler(listKpis));
 router.get('/:id', asyncHandler(getKpi));
 router.post('/', asyncHandler(createKpi));

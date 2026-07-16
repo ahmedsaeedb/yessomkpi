@@ -10,6 +10,7 @@ import kpiValuesRoutes from './routes/kpiValues.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import reportsRoutes from './routes/reports.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
+import usersRoutes from './routes/users.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 seedDatabase();
@@ -30,6 +31,7 @@ app.use('/api/kpi-values', kpiValuesRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/users', usersRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

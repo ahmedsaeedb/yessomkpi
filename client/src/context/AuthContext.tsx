@@ -7,7 +7,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { token, user: loggedInUser } = await authService.login(username, password);
     localStorage.setItem(AUTH_TOKEN_KEY, token);
     setUser(loggedInUser);
+    return loggedInUser;
   }
 
   function logout() {

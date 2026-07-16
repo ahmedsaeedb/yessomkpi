@@ -22,7 +22,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const brand = useBrand();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,16 +35,17 @@ export default function Login() {
   });
 
   if (isAuthenticated) {
-    const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/';
-    return <Navigate to={from} replace />;
+    const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+    const fallback = user?.role === 'admin' ? '/' : '/results';
+    return <Navigate to={from ?? fallback} replace />;
   }
 
   async function onSubmit(values: LoginFormValues) {
     setIsSubmitting(true);
     try {
-      await login(values.username, values.password);
+      const loggedInUser = await login(values.username, values.password);
       toast.success('تم تسجيل الدخول بنجاح');
-      navigate('/', { replace: true });
+      navigate(loggedInUser.role === 'admin' ? '/' : '/results', { replace: true });
     } catch (error) {
       toast.error(extractErrorMessage(error, 'اسم المستخدم أو كلمة المرور غير صحيحة'));
     } finally {

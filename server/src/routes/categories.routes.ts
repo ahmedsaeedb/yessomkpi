@@ -6,12 +6,12 @@ import {
   updateCategory,
   deleteCategory,
 } from '../controllers/categories.controller.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(requireAuth, requireAdmin);
 router.get('/', asyncHandler(listCategories));
 router.get('/:id', asyncHandler(getCategory));
 router.post('/', asyncHandler(createCategory));

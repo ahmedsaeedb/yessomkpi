@@ -10,8 +10,6 @@ export interface SettingsInput {
   warningColor?: string;
   dangerColor?: string;
   defaultTheme?: 'light' | 'dark';
-  publicDashboardEnabled?: boolean;
-  publicDashboardPassword?: string;
 }
 
 export const settingsService = {

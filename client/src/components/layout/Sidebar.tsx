@@ -7,6 +7,7 @@ import {
   CalendarRange,
   FileBarChart,
   Settings as SettingsIcon,
+  Users as UsersIcon,
   LogOut,
   Scale,
 } from 'lucide-react';
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { to: '/kpis', label: 'المؤشرات', icon: Gauge },
   { to: '/quarter-data', label: 'البيانات الفصلية', icon: CalendarRange },
   { to: '/reports', label: 'التقارير', icon: FileBarChart },
+  { to: '/users', label: 'المستخدمين', icon: UsersIcon },
   { to: '/settings', label: 'الإعدادات', icon: SettingsIcon },
 ];
 

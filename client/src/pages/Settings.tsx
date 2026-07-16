@@ -8,10 +8,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { ColorPickerInput } from '@/components/shared/ColorPickerInput';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSettings, useUpdateSettings, useUploadLogo } from '@/hooks/useSettings';
 import { useTheme } from '@/context/ThemeContext';
@@ -26,8 +24,6 @@ const schema = z.object({
   successColor: z.string().min(1),
   warningColor: z.string().min(1),
   dangerColor: z.string().min(1),
-  publicDashboardEnabled: z.boolean(),
-  publicDashboardPassword: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -50,8 +46,6 @@ export default function Settings() {
       successColor: '#15803D',
       warningColor: '#D97706',
       dangerColor: '#DC2626',
-      publicDashboardEnabled: true,
-      publicDashboardPassword: '',
     },
   });
 
@@ -65,8 +59,6 @@ export default function Settings() {
         successColor: settings.successColor,
         warningColor: settings.warningColor,
         dangerColor: settings.dangerColor,
-        publicDashboardEnabled: settings.publicDashboardEnabled,
-        publicDashboardPassword: '',
       });
     }
   }, [settings, form]);
@@ -87,11 +79,7 @@ export default function Settings() {
   }
 
   async function onSubmit(values: FormValues) {
-    const payload = { ...values };
-    if (!payload.publicDashboardPassword) {
-      delete payload.publicDashboardPassword;
-    }
-    await updateMutation.mutateAsync(payload);
+    await updateMutation.mutateAsync(values);
   }
 
   if (isLoading) {
@@ -105,7 +93,7 @@ export default function Settings() {
 
   return (
     <div>
-      <PageHeader title="الإعدادات" description="تخصيص هوية النظام وألوانه وإعدادات اللوحة العامة" />
+      <PageHeader title="الإعدادات" description="تخصيص هوية النظام وألوانه ومظهره" />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -265,44 +253,6 @@ export default function Settings() {
                   <Moon className="h-4.5 w-4.5" /> داكن
                 </button>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>اللوحة العامة</CardTitle>
-              <CardDescription>لوحة عرض للقراءة فقط محمية بكلمة مرور، مخصصة للعرض التقديمي</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="publicDashboardEnabled"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-3">
-                    <div>
-                      <FormLabel className="cursor-pointer">تفعيل اللوحة العامة</FormLabel>
-                      <FormDescription>السماح بالوصول للوحة العرض العامة عبر رابط مستقل</FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <Separator />
-              <FormField
-                control={form.control}
-                name="publicDashboardPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>كلمة مرور اللوحة العامة</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="اتركها فارغة للإبقاء على كلمة المرور الحالية" {...field} />
-                    </FormControl>
-                    <FormDescription>يجب أن تتكون من 4 أحرف على الأقل</FormDescription>
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 

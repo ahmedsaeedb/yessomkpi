@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import type { Request, Response } from 'express';
 import { db } from '../db/db.js';
@@ -22,7 +21,6 @@ function toPublicShape(s: SettingsRow) {
     warningColor: s.warning_color,
     dangerColor: s.danger_color,
     defaultTheme: s.default_theme,
-    publicDashboardEnabled: !!s.public_dashboard_enabled,
   };
 }
 
@@ -43,17 +41,10 @@ const updateSettingsSchema = z.object({
   warningColor: z.string().optional(),
   dangerColor: z.string().optional(),
   defaultTheme: z.enum(['light', 'dark']).optional(),
-  publicDashboardEnabled: z.boolean().optional(),
-  publicDashboardPassword: z.string().min(4).optional(),
 });
 
 export async function updateSettings(req: Request, res: Response) {
   const data = updateSettingsSchema.parse(req.body);
-
-  let publicPasswordHash: string | undefined;
-  if (data.publicDashboardPassword) {
-    publicPasswordHash = await bcrypt.hash(data.publicDashboardPassword, 10);
-  }
 
   db.prepare(
     `UPDATE settings SET
@@ -65,8 +56,6 @@ export async function updateSettings(req: Request, res: Response) {
       warning_color = COALESCE(?, warning_color),
       danger_color = COALESCE(?, danger_color),
       default_theme = COALESCE(?, default_theme),
-      public_dashboard_enabled = COALESCE(?, public_dashboard_enabled),
-      public_dashboard_password_hash = COALESCE(?, public_dashboard_password_hash),
       updated_at = datetime('now')
     WHERE id = 1`
   ).run(
@@ -77,9 +66,7 @@ export async function updateSettings(req: Request, res: Response) {
     data.successColor ?? null,
     data.warningColor ?? null,
     data.dangerColor ?? null,
-    data.defaultTheme ?? null,
-    data.publicDashboardEnabled === undefined ? null : data.publicDashboardEnabled ? 1 : 0,
-    publicPasswordHash ?? null
+    data.defaultTheme ?? null
   );
 
   res.json(toPublicShape(getSettingsRow()));

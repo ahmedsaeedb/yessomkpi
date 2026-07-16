@@ -1,12 +1,22 @@
 export type Status = 'active' | 'inactive';
 export type Quarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 export type KpiStatus = 'excellent' | 'on-track' | 'at-risk' | 'behind';
+export type UserRole = 'admin' | 'viewer';
 
 export interface User {
   id: number;
   username: string;
   fullName: string;
-  role: string;
+  role: UserRole;
+}
+
+export interface ManagedUser {
+  id: number;
+  username: string;
+  full_name: string;
+  role: UserRole;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Category {
@@ -130,7 +140,6 @@ export interface Settings {
   warningColor: string;
   dangerColor: string;
   defaultTheme: 'light' | 'dark';
-  publicDashboardEnabled: boolean;
 }
 
 export interface ReportFilters {

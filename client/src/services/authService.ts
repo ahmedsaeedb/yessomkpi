@@ -11,7 +11,4 @@ export const authService = {
     api.post<LoginResponse>('/auth/login', { username, password }).then((r) => r.data),
 
   me: () => api.get<User>('/auth/me').then((r) => r.data),
-
-  publicLogin: (password: string) =>
-    api.post<{ token: string }>('/auth/public-login', { password }).then((r) => r.data),
 };

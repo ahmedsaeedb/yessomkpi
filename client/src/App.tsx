@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { BrandProvider } from '@/context/BrandContext';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
+import { AdminRoute } from '@/routes/AdminRoute';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
@@ -14,7 +15,8 @@ import Kpis from '@/pages/Kpis';
 import QuarterData from '@/pages/QuarterData';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
-import PublicDashboard from '@/pages/PublicDashboard';
+import Users from '@/pages/Users';
+import Results from '@/pages/Results';
 
 export default function App() {
   return (
@@ -25,16 +27,20 @@ export default function App() {
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/public" element={<PublicDashboard />} />
 
                 <Route element={<ProtectedRoute />}>
-                  <Route element={<DashboardLayout />}>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/categories" element={<Categories />} />
-                    <Route path="/kpis" element={<Kpis />} />
-                    <Route path="/quarter-data" element={<QuarterData />} />
-                    <Route path="/reports" element={<Reports />} />
-                    <Route path="/settings" element={<Settings />} />
+                  <Route path="/results" element={<Results />} />
+
+                  <Route element={<AdminRoute />}>
+                    <Route element={<DashboardLayout />}>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/categories" element={<Categories />} />
+                      <Route path="/kpis" element={<Kpis />} />
+                      <Route path="/quarter-data" element={<QuarterData />} />
+                      <Route path="/reports" element={<Reports />} />
+                      <Route path="/users" element={<Users />} />
+                      <Route path="/settings" element={<Settings />} />
+                    </Route>
                   </Route>
                 </Route>
 

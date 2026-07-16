@@ -1,12 +1,13 @@
 export type Status = 'active' | 'inactive';
 export type Quarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
+export type UserRole = 'admin' | 'viewer';
 
 export interface UserRow {
   id: number;
   username: string;
   password_hash: string;
   full_name: string;
-  role: string;
+  role: UserRole;
   created_at: string;
   updated_at: string;
 }
@@ -22,8 +23,6 @@ export interface SettingsRow {
   warning_color: string;
   danger_color: string;
   default_theme: string;
-  public_dashboard_enabled: number;
-  public_dashboard_password_hash: string | null;
   updated_at: string;
 }
 
@@ -69,9 +68,5 @@ export interface KpiValueRow {
 export interface AuthTokenPayload {
   sub: number;
   username: string;
-  role: string;
-}
-
-export interface PublicTokenPayload {
-  role: 'public';
+  role: UserRole;
 }

@@ -5,12 +5,12 @@ import {
   upsertKpiValue,
   deleteKpiValue,
 } from '../controllers/kpiValues.controller.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(requireAuth, requireAdmin);
 router.get('/', asyncHandler(listKpiValues));
 router.get('/:id', asyncHandler(getKpiValue));
 router.post('/', asyncHandler(upsertKpiValue));
