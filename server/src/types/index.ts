@@ -23,6 +23,7 @@ export interface SettingsRow {
   warning_color: string;
   danger_color: string;
   default_theme: string;
+  results_config: string | null;
   updated_at: string;
 }
 

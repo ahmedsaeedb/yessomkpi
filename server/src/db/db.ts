@@ -20,4 +20,20 @@ const schemaPath = path.join(config.rootDir, 'src', 'db', 'schema.sql');
 const schema = fs.readFileSync(schemaPath, 'utf-8');
 db.exec(schema);
 
+/**
+ * `CREATE TABLE IF NOT EXISTS` only applies to brand-new databases - it never
+ * retroactively adds columns to a database that already exists from a previous
+ * version of the app. This keeps existing installs (and their data) working
+ * after additive schema changes, without a full migration framework.
+ */
+function ensureColumn(table: string, column: string, definition: string) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  const exists = columns.some((c) => c.name === column);
+  if (!exists) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+ensureColumn('settings', 'results_config', 'TEXT');
+
 export default db;

@@ -90,8 +90,7 @@ export async function dashboardSummary(req: Request, res: Response) {
         (values.reduce((s, v) => s + metricsFor(v).achievementPercent, 0) / values.length).toFixed(2)
       ),
     }))
-    .sort((a, b) => b.achievementPercent - a.achievementPercent)
-    .slice(0, 5);
+    .sort((a, b) => b.achievementPercent - a.achievementPercent);
 
   // Top KPIs by achievement
   const topKpis = currentValues
@@ -106,8 +105,7 @@ export async function dashboardSummary(req: Request, res: Response) {
       target: v.target,
       ...metricsFor(v),
     }))
-    .sort((a, b) => b.achievementPercent - a.achievementPercent)
-    .slice(0, 6);
+    .sort((a, b) => b.achievementPercent - a.achievementPercent);
 
   // Latest updates across all KPIs
   const latestUpdates = db

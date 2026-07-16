@@ -26,6 +26,8 @@ export default function Dashboard() {
   const [quarter, setQuarter] = useState<string | undefined>(undefined);
 
   const { data, isLoading, isError } = useDashboard({ year, quarter });
+  const topCategories = data?.topCategories.slice(0, 5) ?? [];
+  const topKpis = data?.topKpis.slice(0, 6) ?? [];
 
   return (
     <div>
@@ -136,8 +138,8 @@ export default function Dashboard() {
                 <CardTitle>أفضل الفئات أداءً</CardTitle>
               </CardHeader>
               <CardContent>
-                {data.topCategories.length > 0 ? (
-                  <CategoryAchievementChart data={data.topCategories} />
+                {topCategories.length > 0 ? (
+                  <CategoryAchievementChart data={topCategories} />
                 ) : (
                   <EmptyState title="لا توجد بيانات كافية" description="أضف بيانات فصلية لعرض أفضل الفئات" />
                 )}
@@ -151,10 +153,10 @@ export default function Dashboard() {
                 <CardTitle>أفضل المؤشرات أداءً</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {data.topKpis.length === 0 && (
+                {topKpis.length === 0 && (
                   <EmptyState title="لا توجد مؤشرات بعد" description="ابدأ بإضافة فئات ومؤشرات وبيانات فصلية" />
                 )}
-                {data.topKpis.map((kpi, i) => (
+                {topKpis.map((kpi, i) => (
                   <motion.div
                     key={kpi.id}
                     initial={{ opacity: 0, x: 8 }}

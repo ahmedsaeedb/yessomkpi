@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { db } from './db.js';
 import { config } from '../config.js';
 import { currentYear } from '../utils/calculations.js';
+import { DEFAULT_RESULTS_CONFIG } from '../utils/resultsConfig.js';
 
 export function seedDatabase() {
   const userCount = (db.prepare('SELECT COUNT(*) as c FROM users').get() as { c: number }).c;
@@ -23,8 +24,8 @@ export function seedDatabase() {
   const settingsCount = (db.prepare('SELECT COUNT(*) as c FROM settings').get() as { c: number }).c;
   if (settingsCount === 0) {
     db.prepare(
-      `INSERT INTO settings (id, company_name, system_name, primary_color, secondary_color, success_color, warning_color, danger_color)
-       VALUES (1, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO settings (id, company_name, system_name, primary_color, secondary_color, success_color, warning_color, danger_color, results_config)
+       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       'يسوم للمحاماة',
       'مؤشرات أداء قسم التسويق',
@@ -32,7 +33,8 @@ export function seedDatabase() {
       '#C9A24B',
       '#15803D',
       '#D97706',
-      '#DC2626'
+      '#DC2626',
+      JSON.stringify(DEFAULT_RESULTS_CONFIG)
     );
     console.log('✔ تم إنشاء إعدادات النظام الافتراضية');
   }

@@ -8,6 +8,7 @@ import {
   FileBarChart,
   Settings as SettingsIcon,
   Users as UsersIcon,
+  LayoutGrid,
   LogOut,
   Scale,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { to: '/quarter-data', label: 'البيانات الفصلية', icon: CalendarRange },
   { to: '/reports', label: 'التقارير', icon: FileBarChart },
   { to: '/users', label: 'المستخدمين', icon: UsersIcon },
+  { to: '/display-settings', label: 'تخصيص العرض', icon: LayoutGrid },
   { to: '/settings', label: 'الإعدادات', icon: SettingsIcon },
 ];
 

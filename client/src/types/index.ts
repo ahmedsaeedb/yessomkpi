@@ -130,6 +130,15 @@ export interface ReportRow {
   updatedAt: string;
 }
 
+export interface ResultsConfig {
+  showStats: boolean;
+  quarterTrend: { visible: boolean; chartType: 'area' | 'line' | 'bar' };
+  radialGauge: { visible: boolean };
+  yearComparison: { visible: boolean; chartType: 'bar' | 'line' };
+  topCategories: { visible: boolean; chartType: 'bar' | 'donut'; mode: 'auto' | 'manual'; categoryIds: number[] };
+  topKpis: { visible: boolean; mode: 'auto' | 'manual'; kpiIds: number[] };
+}
+
 export interface Settings {
   companyName: string;
   systemName: string;
@@ -140,6 +149,7 @@ export interface Settings {
   warningColor: string;
   dangerColor: string;
   defaultTheme: 'light' | 'dark';
+  resultsConfig: ResultsConfig;
 }
 
 export interface ReportFilters {

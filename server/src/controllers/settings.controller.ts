@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { db } from '../db/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { SettingsRow } from '../types/index.js';
+import { parseResultsConfig, resultsConfigSchema } from '../utils/resultsConfig.js';
 
 function getSettingsRow(): SettingsRow {
   const settings = db.prepare('SELECT * FROM settings WHERE id = 1').get() as SettingsRow | undefined;
@@ -21,6 +22,7 @@ function toPublicShape(s: SettingsRow) {
     warningColor: s.warning_color,
     dangerColor: s.danger_color,
     defaultTheme: s.default_theme,
+    resultsConfig: parseResultsConfig(s.results_config),
   };
 }
 
@@ -41,6 +43,7 @@ const updateSettingsSchema = z.object({
   warningColor: z.string().optional(),
   dangerColor: z.string().optional(),
   defaultTheme: z.enum(['light', 'dark']).optional(),
+  resultsConfig: resultsConfigSchema.optional(),
 });
 
 export async function updateSettings(req: Request, res: Response) {
@@ -56,6 +59,7 @@ export async function updateSettings(req: Request, res: Response) {
       warning_color = COALESCE(?, warning_color),
       danger_color = COALESCE(?, danger_color),
       default_theme = COALESCE(?, default_theme),
+      results_config = COALESCE(?, results_config),
       updated_at = datetime('now')
     WHERE id = 1`
   ).run(
@@ -66,7 +70,8 @@ export async function updateSettings(req: Request, res: Response) {
     data.successColor ?? null,
     data.warningColor ?? null,
     data.dangerColor ?? null,
-    data.defaultTheme ?? null
+    data.defaultTheme ?? null,
+    data.resultsConfig ? JSON.stringify(data.resultsConfig) : null
   );
 
   res.json(toPublicShape(getSettingsRow()));

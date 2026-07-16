@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
-import type { Settings } from '@/types';
+import type { ResultsConfig, Settings } from '@/types';
 
 export interface SettingsInput {
   companyName?: string;
@@ -10,6 +10,7 @@ export interface SettingsInput {
   warningColor?: string;
   dangerColor?: string;
   defaultTheme?: 'light' | 'dark';
+  resultsConfig?: ResultsConfig;
 }
 
 export const settingsService = {

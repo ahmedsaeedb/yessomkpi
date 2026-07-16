@@ -25,6 +25,7 @@ export function useUpdateSettings() {
     mutationFn: (data: SettingsInput) => settingsService.update(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: ['settings', 'public'] });
       toast.success('تم حفظ الإعدادات بنجاح');
     },
     onError: (error) => toast.error(extractErrorMessage(error, 'تعذر حفظ الإعدادات')),

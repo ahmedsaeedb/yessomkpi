@@ -16,6 +16,7 @@ import QuarterData from '@/pages/QuarterData';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import Users from '@/pages/Users';
+import DisplaySettings from '@/pages/DisplaySettings';
 import Results from '@/pages/Results';
 
 export default function App() {
@@ -39,6 +40,7 @@ export default function App() {
                       <Route path="/quarter-data" element={<QuarterData />} />
                       <Route path="/reports" element={<Reports />} />
                       <Route path="/users" element={<Users />} />
+                      <Route path="/display-settings" element={<DisplaySettings />} />
                       <Route path="/settings" element={<Settings />} />
                     </Route>
                   </Route>
