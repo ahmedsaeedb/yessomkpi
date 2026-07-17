@@ -83,10 +83,11 @@ export interface DashboardSummary {
   };
   quarterComparison: Array<{ quarter: Quarter; achievementPercent: number; growthPercent: number }>;
   yearComparison: Array<{ year: number; achievementPercent: number }>;
-  topCategories: Array<{ id: number; name: string; achievementPercent: number }>;
+  topCategories: Array<{ id: number; name: string; achievementPercent: number; growthPercent: number; kpiCount: number }>;
   topKpis: Array<{
     id: number;
     name: string;
+    categoryId: number;
     categoryName: string;
     unit: string;
     color: string;
@@ -101,6 +102,7 @@ export interface DashboardSummary {
   latestUpdates: Array<{
     kpiId: number;
     kpiName: string;
+    categoryId: number;
     categoryName: string;
     year: number;
     quarter: Quarter;
@@ -130,13 +132,89 @@ export interface ReportRow {
   updatedAt: string;
 }
 
+export type WidgetType = 'stat' | 'trend' | 'category' | 'kpi' | 'radial' | 'updates' | 'text';
+
+export interface BaseWidget {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  title?: string;
+}
+
+export interface StatWidget extends BaseWidget {
+  type: 'stat';
+  metric: 'categoriesCount' | 'kpisCount' | 'avgAchievement' | 'avgGrowth' | 'kpiValue' | 'categoryValue';
+  kpiId?: number;
+  kpiField?: 'current' | 'target' | 'achievement' | 'growth' | 'difference';
+  categoryId?: number;
+  color?: string;
+  icon?: string;
+  showTrend?: boolean;
+}
+
+export interface TrendWidget extends BaseWidget {
+  type: 'trend';
+  timeframe: 'quarterly' | 'yearly';
+  chartType: 'area' | 'line' | 'bar';
+  metrics: Array<'achievement' | 'growth'>;
+  scope: 'all' | 'category' | 'kpi';
+  categoryId?: number;
+  kpiId?: number;
+}
+
+export interface CategoryWidget extends BaseWidget {
+  type: 'category';
+  chartType: 'bar' | 'donut';
+  mode: 'autoTop' | 'autoBottom' | 'manual';
+  count?: number;
+  categoryIds?: number[];
+  metric: 'achievement' | 'growth' | 'kpiCount';
+}
+
+export interface KpiWidget extends BaseWidget {
+  type: 'kpi';
+  display: 'cards' | 'table';
+  mode: 'autoTop' | 'autoBottom' | 'manual' | 'byCategory';
+  count?: number;
+  kpiIds?: number[];
+  categoryId?: number;
+  columns?: Array<'name' | 'category' | 'current' | 'target' | 'achievement' | 'growth' | 'status' | 'updatedAt'>;
+}
+
+export interface RadialWidget extends BaseWidget {
+  type: 'radial';
+  source: 'overall' | 'category' | 'kpi';
+  categoryId?: number;
+  kpiId?: number;
+  color?: string;
+}
+
+export interface UpdatesWidget extends BaseWidget {
+  type: 'updates';
+  count: number;
+  categoryId?: number;
+}
+
+export interface TextWidget extends BaseWidget {
+  type: 'text';
+  text: string;
+  align: 'right' | 'center' | 'left';
+  size: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+export type Widget =
+  | StatWidget
+  | TrendWidget
+  | CategoryWidget
+  | KpiWidget
+  | RadialWidget
+  | UpdatesWidget
+  | TextWidget;
+
 export interface ResultsConfig {
-  showStats: boolean;
-  quarterTrend: { visible: boolean; chartType: 'area' | 'line' | 'bar' };
-  radialGauge: { visible: boolean };
-  yearComparison: { visible: boolean; chartType: 'bar' | 'line' };
-  topCategories: { visible: boolean; chartType: 'bar' | 'donut'; mode: 'auto' | 'manual'; categoryIds: number[] };
-  topKpis: { visible: boolean; mode: 'auto' | 'manual'; kpiIds: number[] };
+  widgets: Widget[];
 }
 
 export interface Settings {

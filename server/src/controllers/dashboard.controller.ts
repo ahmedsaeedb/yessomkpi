@@ -89,6 +89,10 @@ export async function dashboardSummary(req: Request, res: Response) {
       achievementPercent: Number(
         (values.reduce((s, v) => s + metricsFor(v).achievementPercent, 0) / values.length).toFixed(2)
       ),
+      growthPercent: Number(
+        (values.reduce((s, v) => s + metricsFor(v).growthPercent, 0) / values.length).toFixed(2)
+      ),
+      kpiCount: values.length,
     }))
     .sort((a, b) => b.achievementPercent - a.achievementPercent);
 
@@ -97,6 +101,7 @@ export async function dashboardSummary(req: Request, res: Response) {
     .map((v) => ({
       id: v.kpi_id,
       name: v.kpi_name,
+      categoryId: v.category_id,
       categoryName: v.category_name,
       unit: v.unit,
       color: v.color,
@@ -128,6 +133,7 @@ export async function dashboardSummary(req: Request, res: Response) {
     latestUpdates: latestUpdates.map((v) => ({
       kpiId: v.kpi_id,
       kpiName: v.kpi_name,
+      categoryId: v.category_id,
       categoryName: v.category_name,
       year: v.year,
       quarter: v.quarter,
@@ -137,4 +143,58 @@ export async function dashboardSummary(req: Request, res: Response) {
       ...metricsFor(v),
     })),
   });
+}
+
+/**
+ * Scoped trend series for a single trend widget: overall, one category, or one KPI,
+ * across the 4 quarters of a year, or the last 4 years.
+ */
+export async function dashboardTrend(req: Request, res: Response) {
+  const timeframe = (req.query.timeframe as string) === 'yearly' ? 'yearly' : 'quarterly';
+  const scope = (req.query.scope as string) || 'all';
+  const id = req.query.id ? Number(req.query.id) : undefined;
+  const year = Number(req.query.year) || currentYear();
+
+  const metricsFor = (v: ValueJoinRow) => calculateKpiMetrics(v.current_value, v.previous_value, v.target);
+
+  let scopeClause = '';
+  const scopeParams: unknown[] = [];
+  if (scope === 'category' && id) {
+    scopeClause = ' AND k.category_id = ?';
+    scopeParams.push(id);
+  } else if (scope === 'kpi' && id) {
+    scopeClause = ' AND v.kpi_id = ?';
+    scopeParams.push(id);
+  }
+
+  if (timeframe === 'quarterly') {
+    const series = QUARTERS.map((q) => {
+      const rows = db
+        .prepare(`${baseValueQuery} WHERE v.year = ? AND v.quarter = ?${scopeClause}`)
+        .all(year, q, ...scopeParams) as ValueJoinRow[];
+      const avgAchievement = rows.length
+        ? rows.reduce((s, v) => s + metricsFor(v).achievementPercent, 0) / rows.length
+        : 0;
+      const avgGrowth = rows.length
+        ? rows.reduce((s, v) => s + metricsFor(v).growthPercent, 0) / rows.length
+        : 0;
+      return { label: q, achievementPercent: Number(avgAchievement.toFixed(2)), growthPercent: Number(avgGrowth.toFixed(2)) };
+    });
+    return res.json({ series });
+  }
+
+  const years = Array.from({ length: 4 }, (_, i) => year - 3 + i);
+  const series = years.map((y) => {
+    const rows = db
+      .prepare(`${baseValueQuery} WHERE v.year = ?${scopeClause}`)
+      .all(y, ...scopeParams) as ValueJoinRow[];
+    const avgAchievement = rows.length
+      ? rows.reduce((s, v) => s + metricsFor(v).achievementPercent, 0) / rows.length
+      : 0;
+    const avgGrowth = rows.length
+      ? rows.reduce((s, v) => s + metricsFor(v).growthPercent, 0) / rows.length
+      : 0;
+    return { label: String(y), achievementPercent: Number(avgAchievement.toFixed(2)), growthPercent: Number(avgGrowth.toFixed(2)) };
+  });
+  res.json({ series });
 }

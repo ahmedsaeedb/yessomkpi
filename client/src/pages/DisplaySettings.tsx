@@ -1,67 +1,78 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { LayoutGrid } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+import { Plus, Save, LayoutGrid } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { WidgetShell } from '@/components/widgets/WidgetShell';
+import { WidgetRenderer } from '@/components/widgets/WidgetRenderer';
+import { WidgetSettingsForm } from '@/components/widgets/WidgetSettingsForm';
 import { useSettings, useUpdateSettings } from '@/hooks/useSettings';
 import { useCategories } from '@/hooks/useCategories';
 import { useKpis } from '@/hooks/useKpis';
-import { DEFAULT_RESULTS_CONFIG } from '@/lib/resultsConfig';
-import type { ResultsConfig } from '@/types';
+import { useDashboard } from '@/hooks/useDashboard';
+import { DEFAULT_RESULTS_CONFIG, GRID_COLS, GRID_ROW_HEIGHT } from '@/lib/resultsConfig';
+import type { Widget, WidgetType } from '@/types';
 
-const schema = z.object({
-  showStats: z.boolean(),
-  quarterTrend: z.object({ visible: z.boolean(), chartType: z.enum(['area', 'line', 'bar']) }),
-  radialGauge: z.object({ visible: z.boolean() }),
-  yearComparison: z.object({ visible: z.boolean(), chartType: z.enum(['bar', 'line']) }),
-  topCategories: z.object({
-    visible: z.boolean(),
-    chartType: z.enum(['bar', 'donut']),
-    mode: z.enum(['auto', 'manual']),
-    categoryIds: z.array(z.number()),
-  }),
-  topKpis: z.object({
-    visible: z.boolean(),
-    mode: z.enum(['auto', 'manual']),
-    kpiIds: z.array(z.number()),
-  }),
-});
+const ResponsiveGridLayout = WidthProvider(GridLayout);
 
-type FormValues = z.infer<typeof schema>;
+const WIDGET_LABELS: Record<WidgetType, string> = {
+  stat: 'بطاقة إحصائية',
+  trend: 'رسم مقارنة زمنية',
+  category: 'رسم أداء الفئات',
+  kpi: 'عرض أداء المؤشرات',
+  radial: 'مقياس دائري',
+  updates: 'آخر التحديثات',
+  text: 'عنوان / نص',
+};
 
-function SectionCard({
-  title,
-  description,
-  visible,
-  onVisibleChange,
-  children,
-}: {
-  title: string;
-  description: string;
-  visible: boolean;
-  onVisibleChange: (v: boolean) => void;
-  children?: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </div>
-        <Switch checked={visible} onCheckedChange={onVisibleChange} />
-      </CardHeader>
-      {children && visible && <CardContent className="space-y-4">{children}</CardContent>}
-    </Card>
-  );
+const WIDGET_DEFAULT_SIZE: Record<WidgetType, { w: number; h: number }> = {
+  stat: { w: 3, h: 2 },
+  trend: { w: 6, h: 6 },
+  category: { w: 6, h: 6 },
+  kpi: { w: 12, h: 6 },
+  radial: { w: 4, h: 6 },
+  updates: { w: 4, h: 6 },
+  text: { w: 12, h: 2 },
+};
+
+function createWidget(type: WidgetType, widgets: Widget[]): Widget {
+  const id = `w-${Date.now()}`;
+  const size = WIDGET_DEFAULT_SIZE[type];
+  const y = widgets.length ? Math.max(...widgets.map((w) => w.y + w.h)) : 0;
+  const base = { id, x: 0, y, w: size.w, h: size.h, title: WIDGET_LABELS[type] };
+
+  switch (type) {
+    case 'stat':
+      return { ...base, type: 'stat', metric: 'avgAchievement', color: '#0B2545', icon: 'BarChart3' };
+    case 'trend':
+      return { ...base, type: 'trend', timeframe: 'quarterly', chartType: 'area', metrics: ['achievement'], scope: 'all' };
+    case 'category':
+      return { ...base, type: 'category', chartType: 'bar', mode: 'autoTop', count: 5, metric: 'achievement' };
+    case 'kpi':
+      return { ...base, type: 'kpi', display: 'cards', mode: 'autoTop', count: 6 };
+    case 'radial':
+      return { ...base, type: 'radial', source: 'overall' };
+    case 'updates':
+      return { ...base, type: 'updates', count: 5 };
+    case 'text':
+      return { ...base, type: 'text', text: 'عنوان جديد', align: 'right', size: 'lg' };
+  }
 }
 
 export default function DisplaySettings() {
@@ -69,37 +80,45 @@ export default function DisplaySettings() {
   const updateMutation = useUpdateSettings();
   const { data: categories } = useCategories({ status: 'active' });
   const { data: kpis } = useKpis({ status: 'active' });
+  const { data: dashboardData } = useDashboard();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: DEFAULT_RESULTS_CONFIG,
-  });
+  const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_RESULTS_CONFIG.widgets);
+  const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
 
   useEffect(() => {
-    if (settings?.resultsConfig) {
-      form.reset(settings.resultsConfig);
+    if (settings?.resultsConfig?.widgets) {
+      setWidgets(settings.resultsConfig.widgets);
     }
-  }, [settings, form]);
+  }, [settings]);
 
-  const values = form.watch();
-
-  async function onSubmit(data: FormValues) {
-    await updateMutation.mutateAsync({ resultsConfig: data as ResultsConfig });
+  function handleLayoutChange(layout: Layout[]) {
+    setWidgets((prev) =>
+      prev.map((w) => {
+        const l = layout.find((item) => item.i === w.id);
+        if (!l) return w;
+        return { ...w, x: l.x, y: l.y, w: l.w, h: l.h };
+      })
+    );
   }
 
-  function toggleCategory(id: number) {
-    const current = form.getValues('topCategories.categoryIds');
-    const next = current.includes(id) ? current.filter((c) => c !== id) : [...current, id];
-    form.setValue('topCategories.categoryIds', next, { shouldDirty: true });
+  function handleAddWidget(type: WidgetType) {
+    setWidgets((prev) => [...prev, createWidget(type, prev)]);
   }
 
-  function toggleKpi(id: number) {
-    const current = form.getValues('topKpis.kpiIds');
-    const next = current.includes(id) ? current.filter((k) => k !== id) : [...current, id];
-    form.setValue('topKpis.kpiIds', next, { shouldDirty: true });
+  function handleDeleteWidget(id: string) {
+    setWidgets((prev) => prev.filter((w) => w.id !== id));
   }
 
-  if (isLoading) {
+  function handleSaveWidgetSettings(updated: Widget) {
+    setWidgets((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+    setEditingWidget(null);
+  }
+
+  async function handleSaveLayout() {
+    await updateMutation.mutateAsync({ resultsConfig: { widgets } });
+  }
+
+  if (isLoading || !dashboardData) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
@@ -108,221 +127,92 @@ export default function DisplaySettings() {
     );
   }
 
+  const layout: Layout[] = widgets.map((w) => ({ i: w.id, x: w.x, y: w.y, w: w.w, h: w.h, minW: 2, minH: 1 }));
+
   return (
     <div>
       <PageHeader
         title="تخصيص صفحة النتائج"
-        description="تحكم بالأقسام والرسومات البيانية الظاهرة لمستخدمي العرض في صفحة النتائج"
-      />
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <SectionCard
-            title="بطاقات الإحصائيات العلوية"
-            description="عدد الفئات والمؤشرات ومتوسط الإنجاز والنمو"
-            visible={values.showStats}
-            onVisibleChange={(v) => form.setValue('showStats', v, { shouldDirty: true })}
-          />
-
-          <SectionCard
-            title="مقارنة الأداء الفصلي"
-            description="رسم بياني لأداء الأرباع الأربعة خلال السنة"
-            visible={values.quarterTrend.visible}
-            onVisibleChange={(v) => form.setValue('quarterTrend.visible', v, { shouldDirty: true })}
-          >
-            <FormField
-              control={form.control}
-              name="quarterTrend.chartType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>نوع الرسم البياني</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-56">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="area">مساحي (Area)</SelectItem>
-                      <SelectItem value="line">خطي (Line)</SelectItem>
-                      <SelectItem value="bar">أعمدة (Bar)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-          </SectionCard>
-
-          <SectionCard
-            title="مؤشر الأداء العام الدائري"
-            description="نسبة الإنجاز الإجمالية بشكل مقياس دائري"
-            visible={values.radialGauge.visible}
-            onVisibleChange={(v) => form.setValue('radialGauge.visible', v, { shouldDirty: true })}
-          />
-
-          <SectionCard
-            title="مقارنة الأداء السنوي"
-            description="رسم بياني لمقارنة نسبة الإنجاز عبر السنوات"
-            visible={values.yearComparison.visible}
-            onVisibleChange={(v) => form.setValue('yearComparison.visible', v, { shouldDirty: true })}
-          >
-            <FormField
-              control={form.control}
-              name="yearComparison.chartType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>نوع الرسم البياني</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-56">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="bar">أعمدة (Bar)</SelectItem>
-                      <SelectItem value="line">خطي (Line)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-          </SectionCard>
-
-          <SectionCard
-            title="أفضل الفئات أداءً"
-            description="عرض الفئات الأعلى إنجازًا مع إمكانية اختيار فئات محددة يدويًا"
-            visible={values.topCategories.visible}
-            onVisibleChange={(v) => form.setValue('topCategories.visible', v, { shouldDirty: true })}
-          >
-            <FormField
-              control={form.control}
-              name="topCategories.chartType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>نوع الرسم البياني</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-56">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="bar">أعمدة (Bar)</SelectItem>
-                      <SelectItem value="donut">دائري (Donut)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="topCategories.mode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>طريقة الاختيار</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-56">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="auto">تلقائي (الأفضل أداءً)</SelectItem>
-                      <SelectItem value="manual">يدوي (اختيار محدد)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            {values.topCategories.mode === 'manual' && (
-              <div className="space-y-2 rounded-lg border border-border p-3">
-                <p className="text-xs text-muted-foreground">اختر الفئات التي تريد إظهارها:</p>
-                <div className="flex flex-wrap gap-2">
-                  {categories?.map((c) => {
-                    const checked = values.topCategories.categoryIds.includes(c.id);
-                    return (
-                      <button
-                        type="button"
-                        key={c.id}
-                        onClick={() => toggleCategory(c.id)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                          checked ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'
-                        }`}
-                      >
-                        {c.name}
-                      </button>
-                    );
-                  })}
-                  {categories?.length === 0 && <p className="text-xs text-muted-foreground">لا توجد فئات نشطة</p>}
-                </div>
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="أفضل المؤشرات أداءً"
-            description="عرض قائمة المؤشرات الأعلى إنجازًا مع إمكانية اختيار مؤشرات محددة يدويًا"
-            visible={values.topKpis.visible}
-            onVisibleChange={(v) => form.setValue('topKpis.visible', v, { shouldDirty: true })}
-          >
-            <FormField
-              control={form.control}
-              name="topKpis.mode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>طريقة الاختيار</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-56">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="auto">تلقائي (الأفضل أداءً)</SelectItem>
-                      <SelectItem value="manual">يدوي (اختيار محدد)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            {values.topKpis.mode === 'manual' && (
-              <div className="space-y-2 rounded-lg border border-border p-3">
-                <p className="text-xs text-muted-foreground">اختر المؤشرات التي تريد إظهارها:</p>
-                <div className="flex flex-wrap gap-2">
-                  {kpis?.map((k) => {
-                    const checked = values.topKpis.kpiIds.includes(k.id);
-                    return (
-                      <button
-                        type="button"
-                        key={k.id}
-                        onClick={() => toggleKpi(k.id)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                          checked ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'
-                        }`}
-                      >
-                        {k.name}
-                      </button>
-                    );
-                  })}
-                  {kpis?.length === 0 && <p className="text-xs text-muted-foreground">لا توجد مؤشرات نشطة</p>}
-                </div>
-              </div>
-            )}
-          </SectionCard>
-
-          <Separator />
-
-          <div className="flex justify-start">
-            <Button type="submit" size="lg" disabled={updateMutation.isPending} className="gap-2">
-              <LayoutGrid className="h-4 w-4" />
-              {updateMutation.isPending ? 'جارٍ الحفظ...' : 'حفظ التخصيص'}
+        description="صمّم صفحة النتائج بحرية كاملة — أضف العناصر، اسحبها وغيّر حجمها، واختر البيانات التي تعرضها"
+        actions={
+          <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  إضافة عنصر
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {(Object.keys(WIDGET_LABELS) as WidgetType[]).map((type) => (
+                  <DropdownMenuItem key={type} onClick={() => handleAddWidget(type)}>
+                    {WIDGET_LABELS[type]}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button onClick={handleSaveLayout} disabled={updateMutation.isPending} className="gap-2">
+              <Save className="h-4 w-4" />
+              {updateMutation.isPending ? 'جارٍ الحفظ...' : 'حفظ التصميم'}
             </Button>
           </div>
-        </form>
-      </Form>
+        }
+      />
+
+      {widgets.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 px-6 py-20 text-center">
+          <LayoutGrid className="h-10 w-10 text-muted-foreground" />
+          <p className="font-semibold">الصفحة فارغة</p>
+          <p className="text-sm text-muted-foreground">ابدأ بإضافة عناصر من زر "إضافة عنصر" أعلاه</p>
+        </div>
+      ) : (
+        <div dir="ltr">
+          <ResponsiveGridLayout
+            className="layout"
+            layout={layout}
+            cols={GRID_COLS}
+            rowHeight={GRID_ROW_HEIGHT}
+            onLayoutChange={handleLayoutChange}
+            draggableHandle=".widget-drag-handle"
+            compactType="vertical"
+            margin={[12, 12]}
+          >
+            {widgets.map((w) => (
+              <div key={w.id}>
+                <div dir="rtl" className="h-full">
+                  <WidgetShell
+                    title={w.title}
+                    editable
+                    onEdit={() => setEditingWidget(w)}
+                    onDelete={() => handleDeleteWidget(w.id)}
+                  >
+                    <WidgetRenderer widget={w} data={dashboardData} />
+                  </WidgetShell>
+                </div>
+              </div>
+            ))}
+          </ResponsiveGridLayout>
+        </div>
+      )}
+
+      <Dialog open={!!editingWidget} onOpenChange={(open) => !open && setEditingWidget(null)}>
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto scrollbar-thin">
+          <DialogHeader>
+            <DialogTitle>إعدادات العنصر</DialogTitle>
+          </DialogHeader>
+          {editingWidget && (
+            <WidgetSettingsForm
+              widget={editingWidget}
+              categories={categories ?? []}
+              kpis={kpis ?? []}
+              onChange={setEditingWidget}
+            />
+          )}
+          <DialogFooter>
+            <Button onClick={() => editingWidget && handleSaveWidgetSettings(editingWidget)}>حفظ</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
