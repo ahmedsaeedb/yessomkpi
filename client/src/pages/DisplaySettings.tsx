@@ -169,6 +169,7 @@ export default function DisplaySettings() {
         <div dir="ltr">
           <ResponsiveGridLayout
             className="layout"
+            style={{ position: 'relative' }}
             layout={layout}
             cols={GRID_COLS}
             rowHeight={GRID_ROW_HEIGHT}
