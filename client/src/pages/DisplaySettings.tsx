@@ -39,6 +39,7 @@ const WIDGET_LABELS: Record<WidgetType, string> = {
   radial: 'مقياس دائري',
   updates: 'آخر التحديثات',
   text: 'عنوان / نص',
+  costCenters: 'مراكز التكلفة',
 };
 
 const WIDGET_DEFAULT_SIZE: Record<WidgetType, { w: number; h: number }> = {
@@ -49,6 +50,7 @@ const WIDGET_DEFAULT_SIZE: Record<WidgetType, { w: number; h: number }> = {
   radial: { w: 4, h: 6 },
   updates: { w: 4, h: 6 },
   text: { w: 12, h: 2 },
+  costCenters: { w: 6, h: 6 },
 };
 
 function createWidget(type: WidgetType, widgets: Widget[]): Widget {
@@ -72,6 +74,8 @@ function createWidget(type: WidgetType, widgets: Widget[]): Widget {
       return { ...base, type: 'updates', count: 5 };
     case 'text':
       return { ...base, type: 'text', text: 'عنوان جديد', align: 'right', size: 'lg' };
+    case 'costCenters':
+      return { ...base, type: 'costCenters', display: 'table', scope: 'all', sortBy: 'date' };
   }
 }
 

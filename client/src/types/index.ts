@@ -113,6 +113,39 @@ export interface DashboardSummary {
     achievementPercent: number;
     status: KpiStatus;
   }>;
+  costCenters: Array<{
+    id: number;
+    item: string;
+    amount: number;
+    date: string;
+    year: number;
+    quarter: Quarter;
+    notes: string | null;
+  }>;
+}
+
+export interface CostCenter {
+  id: number;
+  item: string;
+  amount: number;
+  date: string;
+  year: number;
+  quarter: Quarter;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PlanSection = 'general_plan' | 'corrective_actions';
+
+export interface PlanItem {
+  id: number;
+  section: PlanSection;
+  title: string;
+  details: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ReportRow {
@@ -132,7 +165,7 @@ export interface ReportRow {
   updatedAt: string;
 }
 
-export type WidgetType = 'stat' | 'trend' | 'category' | 'kpi' | 'radial' | 'updates' | 'text';
+export type WidgetType = 'stat' | 'trend' | 'category' | 'kpi' | 'radial' | 'updates' | 'text' | 'costCenters';
 
 export interface BaseWidget {
   id: string;
@@ -204,6 +237,16 @@ export interface TextWidget extends BaseWidget {
   size: 'sm' | 'md' | 'lg' | 'xl';
 }
 
+export interface CostCentersWidget extends BaseWidget {
+  type: 'costCenters';
+  display: 'table' | 'cards';
+  scope: 'all' | 'year' | 'quarter';
+  year?: number;
+  quarter?: Quarter;
+  sortBy: 'date' | 'amount';
+  limit?: number;
+}
+
 export type Widget =
   | StatWidget
   | TrendWidget
@@ -211,7 +254,8 @@ export type Widget =
   | KpiWidget
   | RadialWidget
   | UpdatesWidget
-  | TextWidget;
+  | TextWidget
+  | CostCentersWidget;
 
 export interface ResultsConfig {
   widgets: Widget[];

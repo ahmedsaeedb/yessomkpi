@@ -1,44 +1,18 @@
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  LayoutDashboard,
-  FolderKanban,
-  Gauge,
-  CalendarRange,
-  FileBarChart,
-  Settings as SettingsIcon,
-  Users as UsersIcon,
-  LayoutGrid,
-  Wallet,
-  ClipboardList,
-  ShieldAlert,
-  LogOut,
-  Scale,
-} from 'lucide-react';
+import { LayoutDashboard, ClipboardList, ShieldAlert, LogOut, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useBrand } from '@/context/BrandContext';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'الرئيسية', icon: LayoutDashboard, end: true },
-  { to: '/categories', label: 'الفئات', icon: FolderKanban },
-  { to: '/kpis', label: 'المؤشرات', icon: Gauge },
-  { to: '/quarter-data', label: 'البيانات الفصلية', icon: CalendarRange },
-  { to: '/cost-centers', label: 'مراكز التكلفة', icon: Wallet },
-  { to: '/general-plan-settings', label: 'الخطة العامة', icon: ClipboardList },
-  { to: '/corrective-actions-settings', label: 'الإجراءات التصحيحية', icon: ShieldAlert },
-  { to: '/reports', label: 'التقارير', icon: FileBarChart },
-  { to: '/users', label: 'المستخدمين', icon: UsersIcon },
-  { to: '/display-settings', label: 'تخصيص العرض', icon: LayoutGrid },
-  { to: '/settings', label: 'الإعدادات', icon: SettingsIcon },
+  { to: '/results', label: 'النتائج', icon: LayoutDashboard },
+  { to: '/general-plan', label: 'الرئيسية', icon: ClipboardList },
+  { to: '/corrective-actions', label: 'الإجراءات التصحيحية', icon: ShieldAlert },
 ];
 
-export function Sidebar({ className }: { className?: string }) {
+export function ViewerSidebar({ className }: { className?: string }) {
   const { user, logout } = useAuth();
   const brand = useBrand();
 
@@ -73,7 +47,6 @@ export function Sidebar({ className }: { className?: string }) {
           >
             <NavLink
               to={item.to}
-              end={item.end}
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
@@ -100,7 +73,7 @@ export function Sidebar({ className }: { className?: string }) {
           </Avatar>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{user?.fullName}</p>
-            <p className="truncate text-xs text-sidebar-foreground/60">مدير النظام</p>
+            <p className="truncate text-xs text-sidebar-foreground/60">مستخدم عرض</p>
           </div>
           <button
             onClick={logout}

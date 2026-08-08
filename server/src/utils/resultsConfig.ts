@@ -72,6 +72,16 @@ const textWidgetSchema = baseWidgetSchema.extend({
   size: z.enum(['sm', 'md', 'lg', 'xl']),
 });
 
+const costCentersWidgetSchema = baseWidgetSchema.extend({
+  type: z.literal('costCenters'),
+  display: z.enum(['table', 'cards']),
+  scope: z.enum(['all', 'year', 'quarter']),
+  year: z.number().int().optional(),
+  quarter: z.enum(['Q1', 'Q2', 'Q3', 'Q4']).optional(),
+  sortBy: z.enum(['date', 'amount']),
+  limit: z.number().int().min(1).max(100).optional(),
+});
+
 const widgetSchema = z.discriminatedUnion('type', [
   statWidgetSchema,
   trendWidgetSchema,
@@ -80,6 +90,7 @@ const widgetSchema = z.discriminatedUnion('type', [
   radialWidgetSchema,
   updatesWidgetSchema,
   textWidgetSchema,
+  costCentersWidgetSchema,
 ]);
 
 export const resultsConfigSchema = z.object({

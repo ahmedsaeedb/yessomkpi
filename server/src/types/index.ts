@@ -1,6 +1,7 @@
 export type Status = 'active' | 'inactive';
 export type Quarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 export type UserRole = 'admin' | 'viewer';
+export type PlanSection = 'general_plan' | 'corrective_actions';
 
 export interface UserRow {
   id: number;
@@ -62,6 +63,28 @@ export interface KpiValueRow {
   previous_value: number;
   target: number;
   notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CostCenterRow {
+  id: number;
+  item: string;
+  amount: number;
+  date: string;
+  year: number;
+  quarter: Quarter;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlanItemRow {
+  id: number;
+  section: PlanSection;
+  title: string;
+  details: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }

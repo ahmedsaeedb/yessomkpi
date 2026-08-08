@@ -1,7 +1,8 @@
-import type { CategoryWidget, DashboardSummary, KpiWidget, RadialWidget, StatWidget } from '@/types';
+import type { CategoryWidget, CostCentersWidget, DashboardSummary, KpiWidget, RadialWidget, StatWidget } from '@/types';
 
 type CategoryRow = DashboardSummary['topCategories'][number];
 type KpiRow = DashboardSummary['topKpis'][number];
+type CostCenterRow = DashboardSummary['costCenters'][number];
 
 export function selectCategories(all: CategoryRow[], w: CategoryWidget): CategoryRow[] {
   if (w.mode === 'manual') {
@@ -69,6 +70,25 @@ export function statValue(
     default:
       return { value: 0, suffix: '' };
   }
+}
+
+export function selectCostCenters(all: CostCenterRow[], w: CostCentersWidget): CostCenterRow[] {
+  let rows = all;
+  if (w.scope === 'year' && w.year) {
+    rows = rows.filter((c) => c.year === w.year);
+  } else if (w.scope === 'quarter' && w.year && w.quarter) {
+    rows = rows.filter((c) => c.year === w.year && c.quarter === w.quarter);
+  }
+
+  const sorted = [...rows].sort((a, b) =>
+    w.sortBy === 'amount' ? b.amount - a.amount : new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  return w.limit ? sorted.slice(0, w.limit) : sorted;
+}
+
+export function costCentersTotal(rows: CostCenterRow[]): number {
+  return rows.reduce((sum, r) => sum + r.amount, 0);
 }
 
 export function radialValue(widget: RadialWidget, data: DashboardSummary): number {

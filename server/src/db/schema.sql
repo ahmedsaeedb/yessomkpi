@@ -76,6 +76,30 @@ CREATE TABLE IF NOT EXISTS reports (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS cost_centers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  item TEXT NOT NULL,
+  amount REAL NOT NULL DEFAULT 0,
+  date TEXT NOT NULL,
+  year INTEGER NOT NULL,
+  quarter TEXT NOT NULL CHECK (quarter IN ('Q1','Q2','Q3','Q4')),
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS plan_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  section TEXT NOT NULL CHECK (section IN ('general_plan','corrective_actions')),
+  title TEXT NOT NULL,
+  details TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_kpis_category ON kpis(category_id);
 CREATE INDEX IF NOT EXISTS idx_kpi_values_kpi ON kpi_values(kpi_id);
 CREATE INDEX IF NOT EXISTS idx_kpi_values_year_quarter ON kpi_values(year, quarter);
+CREATE INDEX IF NOT EXISTS idx_cost_centers_year_quarter ON cost_centers(year, quarter);
+CREATE INDEX IF NOT EXISTS idx_plan_items_section ON plan_items(section, sort_order);

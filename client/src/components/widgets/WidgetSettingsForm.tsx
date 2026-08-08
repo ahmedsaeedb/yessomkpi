@@ -466,6 +466,78 @@ export function WidgetSettingsForm({ widget, categories, kpis, onChange }: Widge
         </>
       )}
 
+      {widget.type === 'costCenters' && (
+        <>
+          <Field label="نمط العرض">
+            <Select value={widget.display} onValueChange={(v) => update({ display: v as any })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="table">جدول</SelectItem>
+                <SelectItem value="cards">قائمة</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="ترتيب حسب">
+            <Select value={widget.sortBy} onValueChange={(v) => update({ sortBy: v as any })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">الأحدث تاريخًا</SelectItem>
+                <SelectItem value="amount">الأعلى مبلغًا</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="نطاق البيانات">
+            <Select value={widget.scope} onValueChange={(v) => update({ scope: v as any })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل البنود</SelectItem>
+                <SelectItem value="year">سنة محددة</SelectItem>
+                <SelectItem value="quarter">سنة وربع محددين</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          {(widget.scope === 'year' || widget.scope === 'quarter') && (
+            <Field label="السنة">
+              <Input
+                type="number"
+                value={widget.year ?? new Date().getFullYear()}
+                onChange={(e) => update({ year: Number(e.target.value) })}
+              />
+            </Field>
+          )}
+          {widget.scope === 'quarter' && (
+            <Field label="الربع">
+              <Select value={widget.quarter ?? 'Q1'} onValueChange={(v) => update({ quarter: v as any })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Q1">الربع الأول</SelectItem>
+                  <SelectItem value="Q2">الربع الثاني</SelectItem>
+                  <SelectItem value="Q3">الربع الثالث</SelectItem>
+                  <SelectItem value="Q4">الربع الرابع</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
+          <Field label="أقصى عدد للعناصر (اختياري)">
+            <Input
+              type="number"
+              min={1}
+              max={100}
+              value={widget.limit ?? ''}
+              onChange={(e) => update({ limit: e.target.value ? Number(e.target.value) : undefined })}
+            />
+          </Field>
+        </>
+      )}
+
       {widget.type === 'text' && (
         <>
           <Field label="النص">

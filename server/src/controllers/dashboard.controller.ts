@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { db } from '../db/db.js';
 import { calculateKpiMetrics, currentQuarter, currentYear, QUARTERS } from '../utils/calculations.js';
+import type { CostCenterRow } from '../types/index.js';
 
 interface ValueJoinRow {
   id: number;
@@ -117,6 +118,10 @@ export async function dashboardSummary(req: Request, res: Response) {
     .prepare(`${baseValueQuery} ORDER BY v.updated_at DESC LIMIT 8`)
     .all() as ValueJoinRow[];
 
+  const costCenters = db
+    .prepare('SELECT * FROM cost_centers ORDER BY year DESC, quarter DESC, date DESC, id DESC')
+    .all() as CostCenterRow[];
+
   res.json({
     year,
     quarter,
@@ -141,6 +146,15 @@ export async function dashboardSummary(req: Request, res: Response) {
       unit: v.unit,
       updatedAt: v.updated_at,
       ...metricsFor(v),
+    })),
+    costCenters: costCenters.map((c) => ({
+      id: c.id,
+      item: c.item,
+      amount: c.amount,
+      date: c.date,
+      year: c.year,
+      quarter: c.quarter,
+      notes: c.notes,
     })),
   });
 }

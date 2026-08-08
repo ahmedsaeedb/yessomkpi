@@ -6,8 +6,16 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useTrendData } from '@/hooks/useDashboard';
-import { formatDate, formatNumber, cn } from '@/lib/utils';
-import { categoryMetricValue, radialValue, selectCategories, selectKpis, statValue } from './widgetHelpers';
+import { formatDate, formatNumber, quarterLabel, cn } from '@/lib/utils';
+import {
+  categoryMetricValue,
+  costCentersTotal,
+  radialValue,
+  selectCategories,
+  selectCostCenters,
+  selectKpis,
+  statValue,
+} from './widgetHelpers';
 import type { DashboardSummary, Widget } from '@/types';
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -173,6 +181,57 @@ export function WidgetRenderer({ widget, data }: { widget: Widget; data: Dashboa
       return (
         <div className={cn('flex h-full items-center font-bold', sizeClass, alignClass)} style={{ justifyContent: widget.align === 'center' ? 'center' : widget.align === 'left' ? 'flex-start' : 'flex-end' }}>
           {widget.text}
+        </div>
+      );
+    }
+
+    case 'costCenters': {
+      const rows = selectCostCenters(data.costCenters, widget);
+      if (rows.length === 0) return <EmptyState title="لا توجد بنود مركز تكلفة" />;
+      const total = costCentersTotal(rows);
+
+      if (widget.display === 'table') {
+        return (
+          <div className="space-y-2">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>البند</TableHead>
+                  <TableHead>المبلغ</TableHead>
+                  <TableHead>التاريخ</TableHead>
+                  <TableHead>الربع</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell>{c.item}</TableCell>
+                    <TableCell className="tabular-nums">{formatNumber(c.amount)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{formatDate(c.date)}</TableCell>
+                    <TableCell>{quarterLabel(c.quarter)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <p className="text-left text-sm font-semibold">الإجمالي: {formatNumber(total)}</p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-2">
+          {rows.map((c) => (
+            <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-2.5 text-sm">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{c.item}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {quarterLabel(c.quarter)} {c.year} · {formatDate(c.date)}
+                </p>
+              </div>
+              <p className="shrink-0 font-semibold tabular-nums">{formatNumber(c.amount)}</p>
+            </div>
+          ))}
+          <p className="text-left text-sm font-semibold">الإجمالي: {formatNumber(total)}</p>
         </div>
       );
     }
