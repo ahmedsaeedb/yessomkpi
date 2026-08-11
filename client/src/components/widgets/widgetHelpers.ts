@@ -80,9 +80,12 @@ export function selectCostCenters(all: CostCenterRow[], w: CostCentersWidget): C
     rows = rows.filter((c) => c.year === w.year && c.quarter === w.quarter);
   }
 
-  const sorted = [...rows].sort((a, b) =>
-    w.sortBy === 'amount' ? b.amount - a.amount : new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sorted = [...rows].sort((a, b) => {
+    if (w.sortBy === 'amount') return b.amount - a.amount;
+    const aDate = a.dateFrom ?? a.dateTo ?? '';
+    const bDate = b.dateFrom ?? b.dateTo ?? '';
+    return new Date(bDate).getTime() - new Date(aDate).getTime();
+  });
 
   return w.limit ? sorted.slice(0, w.limit) : sorted;
 }

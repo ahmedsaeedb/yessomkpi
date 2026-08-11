@@ -2,16 +2,18 @@ import { api } from '@/lib/axios';
 import type { CostCenter, Quarter } from '@/types';
 
 export interface CostCenterInput {
+  categoryId?: number | null;
   item: string;
   amount: number;
-  date: string;
+  dateFrom?: string | null;
+  dateTo?: string | null;
   year: number;
   quarter: Quarter;
   notes?: string | null;
 }
 
 export const costCenterService = {
-  list: (params?: { year?: number; quarter?: string }) =>
+  list: (params?: { year?: number; quarter?: string; categoryId?: number }) =>
     api.get<CostCenter[]>('/cost-centers', { params }).then((r) => r.data),
 
   create: (data: CostCenterInput) => api.post<CostCenter>('/cost-centers', data).then((r) => r.data),

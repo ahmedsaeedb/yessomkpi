@@ -4,7 +4,7 @@ import { db } from '../db/db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { PlanItemRow } from '../types/index.js';
 
-const SECTIONS = ['general_plan', 'corrective_actions'] as const;
+const SECTIONS = ['general_plan'] as const;
 
 const planItemSchema = z.object({
   section: z.enum(SECTIONS),

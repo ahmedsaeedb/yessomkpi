@@ -12,6 +12,7 @@ import {
   Wallet,
   ClipboardList,
   ShieldAlert,
+  TrendingUp,
   LogOut,
   Scale,
 } from 'lucide-react';
@@ -26,16 +27,17 @@ import {
 
 const NAV_ITEMS = [
   { to: '/', label: 'الرئيسية', icon: LayoutDashboard, end: true },
+  { to: '/general-plan-settings', label: 'الخطة العامة', icon: ClipboardList },
+  { to: '/quarter-data', label: 'البيانات السنوية', icon: CalendarRange },
   { to: '/categories', label: 'الفئات', icon: FolderKanban },
   { to: '/kpis', label: 'المؤشرات', icon: Gauge },
-  { to: '/quarter-data', label: 'البيانات الفصلية', icon: CalendarRange },
   { to: '/cost-centers', label: 'مراكز التكلفة', icon: Wallet },
-  { to: '/general-plan-settings', label: 'الخطة العامة', icon: ClipboardList },
-  { to: '/corrective-actions-settings', label: 'الإجراءات التصحيحية', icon: ShieldAlert },
+  { to: '/roi', label: 'العائد من الاستثمار', icon: TrendingUp },
   { to: '/reports', label: 'التقارير', icon: FileBarChart },
-  { to: '/users', label: 'المستخدمين', icon: UsersIcon },
-  { to: '/display-settings', label: 'تخصيص العرض', icon: LayoutGrid },
+  { to: '/corrective-actions-settings', label: 'الإجراءات التصحيحية', icon: ShieldAlert },
   { to: '/settings', label: 'الإعدادات', icon: SettingsIcon },
+  { to: '/display-settings', label: 'تخصيص العرض', icon: LayoutGrid },
+  { to: '/users', label: 'المستخدمين', icon: UsersIcon },
 ];
 
 export function Sidebar({ className }: { className?: string }) {

@@ -1,21 +1,23 @@
 import { useMemo, useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Plus, Pencil, Trash2, Wallet } from 'lucide-react';
+import { Plus, Pencil, Trash2, Wallet, Tags } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { TableSkeleton } from '@/components/shared/TableSkeleton';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { DataTable } from '@/components/shared/DataTable';
 import { CostCenterFormDialog } from '@/components/costCenters/CostCenterFormDialog';
+import { CostCenterCategoryManagerDialog } from '@/components/costCenters/CostCenterCategoryManagerDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCostCenters, useDeleteCostCenter } from '@/hooks/useCostCenters';
-import { formatDate, formatNumber, quarterLabel } from '@/lib/utils';
+import { formatNumber, formatPeriod, quarterLabel } from '@/lib/utils';
 import type { CostCenter } from '@/types';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - 4 + i);
+const UNCATEGORIZED = 'بدون تصنيف';
 
 export default function CostCenters() {
   const [year, setYear] = useState<string>('all');
@@ -28,6 +30,7 @@ export default function CostCenters() {
   const deleteMutation = useDeleteCostCenter();
 
   const [formOpen, setFormOpen] = useState(false);
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [editing, setEditing] = useState<CostCenter | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CostCenter | null>(null);
 
@@ -41,6 +44,16 @@ export default function CostCenters() {
     setFormOpen(true);
   }
 
+  const groups = useMemo(() => {
+    const map = new Map<string, CostCenter[]>();
+    (data ?? []).forEach((row) => {
+      const key = row.category_name ?? UNCATEGORIZED;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(row);
+    });
+    return Array.from(map.entries());
+  }, [data]);
+
   const columns = useMemo<ColumnDef<CostCenter, any>[]>(
     () => [
       { accessorKey: 'item', header: 'البند', cell: ({ row }) => <span className="font-semibold">{row.original.item}</span> },
@@ -50,15 +63,20 @@ export default function CostCenters() {
         cell: ({ row }) => <span className="tabular-nums">{formatNumber(row.original.amount)}</span>,
       },
       {
-        accessorKey: 'date',
-        header: 'التاريخ',
-        cell: ({ row }) => <span className="text-sm">{formatDate(row.original.date)}</span>,
+        id: 'period',
+        header: 'الفترة',
+        cell: ({ row }) => <span className="text-sm">{formatPeriod(row.original.date_from, row.original.date_to)}</span>,
       },
       { accessorKey: 'year', header: 'السنة' },
       {
         accessorKey: 'quarter',
         header: 'الربع',
         cell: ({ row }) => <span>{quarterLabel(row.original.quarter)}</span>,
+      },
+      {
+        id: 'notes',
+        header: 'ملاحظات',
+        cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.notes ?? '—'}</span>,
       },
       {
         id: 'actions',
@@ -83,7 +101,7 @@ export default function CostCenters() {
     <div>
       <PageHeader
         title="مراكز التكلفة"
-        description="إدارة بنود التكلفة حسب السنة والربع"
+        description="إدارة بنود التكلفة مجمّعة حسب التصنيف"
         actions={
           <div className="flex flex-wrap gap-2">
             <Select value={year} onValueChange={setYear}>
@@ -112,6 +130,10 @@ export default function CostCenters() {
                 ))}
               </SelectContent>
             </Select>
+            <Button variant="outline" onClick={() => setCategoryManagerOpen(true)} className="gap-2">
+              <Tags className="h-4 w-4" />
+              إدارة التصنيفات
+            </Button>
             <Button onClick={handleAdd} className="gap-2">
               <Plus className="h-4 w-4" />
               إضافة بند
@@ -120,24 +142,38 @@ export default function CostCenters() {
         }
       />
 
-      <Card>
-        <CardContent className="p-5">
-          {isLoading && <TableSkeleton rows={5} cols={6} />}
-          {isError && <EmptyState title="تعذر تحميل مراكز التكلفة" description="يرجى المحاولة مرة أخرى" />}
-          {data && data.length === 0 && (
-            <EmptyState
-              icon={Wallet}
-              title="لا توجد بنود بعد"
-              description="ابدأ بإضافة أول بند لمركز التكلفة"
-              actionLabel="إضافة بند"
-              onAction={handleAdd}
-            />
-          )}
-          {data && data.length > 0 && <DataTable columns={columns} data={data} />}
-        </CardContent>
-      </Card>
+      {isLoading && <TableSkeleton rows={5} cols={6} />}
+      {isError && <EmptyState title="تعذر تحميل مراكز التكلفة" description="يرجى المحاولة مرة أخرى" />}
+      {data && data.length === 0 && (
+        <EmptyState
+          icon={Wallet}
+          title="لا توجد بنود بعد"
+          description="ابدأ بإضافة أول بند لمركز التكلفة"
+          actionLabel="إضافة بند"
+          onAction={handleAdd}
+        />
+      )}
+
+      {data && data.length > 0 && (
+        <div className="space-y-6">
+          {groups.map(([categoryName, rows]) => (
+            <div key={categoryName}>
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                {categoryName}
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">{rows.length}</span>
+              </h3>
+              <Card>
+                <CardContent className="p-5">
+                  <DataTable columns={columns} data={rows} />
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+        </div>
+      )}
 
       <CostCenterFormDialog open={formOpen} onOpenChange={setFormOpen} costCenter={editing} />
+      <CostCenterCategoryManagerDialog open={categoryManagerOpen} onOpenChange={setCategoryManagerOpen} />
 
       <ConfirmDialog
         open={!!deleteTarget}

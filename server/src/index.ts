@@ -12,6 +12,9 @@ import reportsRoutes from './routes/reports.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
 import usersRoutes from './routes/users.routes.js';
 import costCentersRoutes from './routes/costCenters.routes.js';
+import costCenterCategoriesRoutes from './routes/costCenterCategories.routes.js';
+import roiRoutes from './routes/roi.routes.js';
+import correctiveActionsRoutes from './routes/correctiveActions.routes.js';
 import planItemsRoutes from './routes/planItems.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
@@ -35,6 +38,9 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/cost-centers', costCentersRoutes);
+app.use('/api/cost-center-categories', costCenterCategoriesRoutes);
+app.use('/api/roi', roiRoutes);
+app.use('/api/corrective-actions', correctiveActionsRoutes);
 app.use('/api/plan-items', planItemsRoutes);
 
 app.use(notFoundHandler);

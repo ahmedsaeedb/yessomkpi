@@ -14,52 +14,47 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useCreateCostCenter, useUpdateCostCenter } from '@/hooks/useCostCenters';
-import { useCostCenterCategories } from '@/hooks/useCostCenterCategories';
+import { useCreateRoiEntry, useUpdateRoiEntry } from '@/hooks/useRoi';
 import { quarterLabel } from '@/lib/utils';
-import type { CostCenter, Quarter } from '@/types';
+import type { RoiEntry, Quarter } from '@/types';
 
 const QUARTERS: Quarter[] = ['Q1', 'Q2', 'Q3', 'Q4'];
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - 4 + i);
-const NO_CATEGORY = 'none';
 
 const schema = z.object({
-  categoryId: z.string(),
-  item: z.string().min(1, 'اسم البند مطلوب'),
-  amount: z.coerce.number().default(0),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
+  date: z.string().min(1, 'التاريخ مطلوب'),
   year: z.coerce.number().int(),
   quarter: z.enum(['Q1', 'Q2', 'Q3', 'Q4']),
+  channel: z.string().min(1, 'قناة الاستثمار مطلوبة'),
+  amount: z.coerce.number().default(0),
+  spend: z.coerce.number().default(0),
   notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-interface CostCenterFormDialogProps {
+interface RoiFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  costCenter?: CostCenter | null;
+  entry?: RoiEntry | null;
 }
 
-export function CostCenterFormDialog({ open, onOpenChange, costCenter }: CostCenterFormDialogProps) {
-  const isEdit = !!costCenter;
-  const createMutation = useCreateCostCenter();
-  const updateMutation = useUpdateCostCenter();
-  const { data: categories } = useCostCenterCategories();
+export function RoiFormDialog({ open, onOpenChange, entry }: RoiFormDialogProps) {
+  const isEdit = !!entry;
+  const createMutation = useCreateRoiEntry();
+  const updateMutation = useUpdateRoiEntry();
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      categoryId: NO_CATEGORY,
-      item: '',
-      amount: 0,
-      dateFrom: '',
-      dateTo: '',
+      date: new Date().toISOString().slice(0, 10),
       year: CURRENT_YEAR,
       quarter: 'Q1',
+      channel: '',
+      amount: 0,
+      spend: 0,
       notes: '',
     },
   });
@@ -67,32 +62,34 @@ export function CostCenterFormDialog({ open, onOpenChange, costCenter }: CostCen
   useEffect(() => {
     if (open) {
       form.reset({
-        categoryId: costCenter?.category_id ? String(costCenter.category_id) : NO_CATEGORY,
-        item: costCenter?.item ?? '',
-        amount: costCenter?.amount ?? 0,
-        dateFrom: costCenter?.date_from ?? '',
-        dateTo: costCenter?.date_to ?? '',
-        year: costCenter?.year ?? CURRENT_YEAR,
-        quarter: costCenter?.quarter ?? 'Q1',
-        notes: costCenter?.notes ?? '',
+        date: entry?.date ?? new Date().toISOString().slice(0, 10),
+        year: entry?.year ?? CURRENT_YEAR,
+        quarter: entry?.quarter ?? 'Q1',
+        channel: entry?.channel ?? '',
+        amount: entry?.amount ?? 0,
+        spend: entry?.spend ?? 0,
+        notes: entry?.notes ?? '',
       });
     }
-  }, [open, costCenter, form]);
+  }, [open, entry, form]);
+
+  const amount = form.watch('amount');
+  const spend = form.watch('spend');
+  const roiPercent = spend ? ((amount - spend) / spend) * 100 : null;
 
   async function onSubmit(values: FormValues) {
     const payload = {
-      categoryId: values.categoryId === NO_CATEGORY ? null : Number(values.categoryId),
-      item: values.item,
-      amount: values.amount,
-      dateFrom: values.dateFrom || null,
-      dateTo: values.dateTo || null,
+      date: values.date,
       year: values.year,
       quarter: values.quarter,
+      channel: values.channel,
+      amount: values.amount,
+      spend: values.spend,
       notes: values.notes || null,
     };
 
-    if (isEdit && costCenter) {
-      await updateMutation.mutateAsync({ id: costCenter.id, data: payload });
+    if (isEdit && entry) {
+      await updateMutation.mutateAsync({ id: entry.id, data: payload });
     } else {
       await createMutation.mutateAsync(payload);
     }
@@ -103,59 +100,19 @@ export function CostCenterFormDialog({ open, onOpenChange, costCenter }: CostCen
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'تعديل بند مركز التكلفة' : 'إضافة بند مركز تكلفة'}</DialogTitle>
+          <DialogTitle>{isEdit ? 'تعديل بند العائد على الاستثمار' : 'إضافة بند عائد على الاستثمار'}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="categoryId"
+              name="channel"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>التصنيف</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={NO_CATEGORY}>بدون تصنيف</SelectItem>
-                      {categories?.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="item"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>البند</FormLabel>
+                  <FormLabel>قناة الاستثمار</FormLabel>
                   <FormControl>
                     <Input placeholder="مثال: إعلانات قوقل" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>المبلغ</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -165,12 +122,12 @@ export function CostCenterFormDialog({ open, onOpenChange, costCenter }: CostCen
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="dateFrom"
+                name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>الفترة من</FormLabel>
+                    <FormLabel>العائد (المبلغ)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="number" step="0.01" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -179,18 +136,41 @@ export function CostCenterFormDialog({ open, onOpenChange, costCenter }: CostCen
 
               <FormField
                 control={form.control}
-                name="dateTo"
+                name="spend"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>الفترة إلى</FormLabel>
+                    <FormLabel>المبلغ المدفوع على القناة</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="number" step="0.01" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            {roiPercent !== null && (
+              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+                نسبة العائد على الاستثمار:{' '}
+                <span className={`font-bold tabular-nums ${roiPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {roiPercent.toFixed(2)}%
+                </span>
+              </p>
+            )}
+
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>التاريخ</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

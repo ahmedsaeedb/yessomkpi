@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useTrendData } from '@/hooks/useDashboard';
-import { formatDate, formatNumber, quarterLabel, cn } from '@/lib/utils';
+import { formatDate, formatNumber, formatPeriod, quarterLabel, cn } from '@/lib/utils';
 import {
   categoryMetricValue,
   costCentersTotal,
@@ -198,7 +198,7 @@ export function WidgetRenderer({ widget, data }: { widget: Widget; data: Dashboa
                 <TableRow>
                   <TableHead>البند</TableHead>
                   <TableHead>المبلغ</TableHead>
-                  <TableHead>التاريخ</TableHead>
+                  <TableHead>الفترة</TableHead>
                   <TableHead>الربع</TableHead>
                 </TableRow>
               </TableHeader>
@@ -207,7 +207,7 @@ export function WidgetRenderer({ widget, data }: { widget: Widget; data: Dashboa
                   <TableRow key={c.id}>
                     <TableCell>{c.item}</TableCell>
                     <TableCell className="tabular-nums">{formatNumber(c.amount)}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{formatDate(c.date)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{formatPeriod(c.dateFrom, c.dateTo)}</TableCell>
                     <TableCell>{quarterLabel(c.quarter)}</TableCell>
                   </TableRow>
                 ))}
@@ -225,7 +225,7 @@ export function WidgetRenderer({ widget, data }: { widget: Widget; data: Dashboa
               <div className="min-w-0">
                 <p className="truncate font-medium">{c.item}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {quarterLabel(c.quarter)} {c.year} · {formatDate(c.date)}
+                  {quarterLabel(c.quarter)} {c.year} · {formatPeriod(c.dateFrom, c.dateTo)}
                 </p>
               </div>
               <p className="shrink-0 font-semibold tabular-nums">{formatNumber(c.amount)}</p>

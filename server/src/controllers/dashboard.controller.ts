@@ -119,8 +119,13 @@ export async function dashboardSummary(req: Request, res: Response) {
     .all() as ValueJoinRow[];
 
   const costCenters = db
-    .prepare('SELECT * FROM cost_centers ORDER BY year DESC, quarter DESC, date DESC, id DESC')
-    .all() as CostCenterRow[];
+    .prepare(
+      `SELECT c.*, cc.name as category_name
+       FROM cost_centers c
+       LEFT JOIN cost_center_categories cc ON cc.id = c.category_id
+       ORDER BY c.year DESC, c.quarter DESC, c.id DESC`
+    )
+    .all() as (CostCenterRow & { category_name: string | null })[];
 
   res.json({
     year,
@@ -149,9 +154,12 @@ export async function dashboardSummary(req: Request, res: Response) {
     })),
     costCenters: costCenters.map((c) => ({
       id: c.id,
+      categoryId: c.category_id,
+      categoryName: c.category_name,
       item: c.item,
       amount: c.amount,
-      date: c.date,
+      dateFrom: c.date_from,
+      dateTo: c.date_to,
       year: c.year,
       quarter: c.quarter,
       notes: c.notes,

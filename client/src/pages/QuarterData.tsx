@@ -56,7 +56,7 @@ export default function QuarterData() {
   return (
     <div>
       <PageHeader
-        title="البيانات الفصلية"
+        title="البيانات السنوية"
         description="إدخال وتحديث القيم الفصلية لمؤشرات الأداء"
         actions={
           <div className="flex flex-wrap gap-2">

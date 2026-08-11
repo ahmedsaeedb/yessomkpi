@@ -76,14 +76,50 @@ CREATE TABLE IF NOT EXISTS reports (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS cost_center_categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS cost_centers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category_id INTEGER REFERENCES cost_center_categories(id) ON DELETE SET NULL,
   item TEXT NOT NULL,
   amount REAL NOT NULL DEFAULT 0,
-  date TEXT NOT NULL,
+  date_from TEXT,
+  date_to TEXT,
   year INTEGER NOT NULL,
   quarter TEXT NOT NULL CHECK (quarter IN ('Q1','Q2','Q3','Q4')),
   notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS roi_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL,
+  year INTEGER NOT NULL,
+  quarter TEXT NOT NULL CHECK (quarter IN ('Q1','Q2','Q3','Q4')),
+  channel TEXT NOT NULL,
+  amount REAL NOT NULL DEFAULT 0,
+  spend REAL NOT NULL DEFAULT 0,
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS corrective_actions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  risk_type TEXT NOT NULL,
+  probability TEXT NOT NULL CHECK (probability IN ('low','medium','high')),
+  impact TEXT NOT NULL CHECK (impact IN ('low','medium','high')),
+  risk_level TEXT NOT NULL CHECK (risk_level IN ('low','medium','high')),
+  treatment TEXT,
+  responsible TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -102,4 +138,7 @@ CREATE INDEX IF NOT EXISTS idx_kpis_category ON kpis(category_id);
 CREATE INDEX IF NOT EXISTS idx_kpi_values_kpi ON kpi_values(kpi_id);
 CREATE INDEX IF NOT EXISTS idx_kpi_values_year_quarter ON kpi_values(year, quarter);
 CREATE INDEX IF NOT EXISTS idx_cost_centers_year_quarter ON cost_centers(year, quarter);
+CREATE INDEX IF NOT EXISTS idx_cost_centers_category ON cost_centers(category_id);
+CREATE INDEX IF NOT EXISTS idx_roi_entries_year_quarter ON roi_entries(year, quarter);
+CREATE INDEX IF NOT EXISTS idx_corrective_actions_sort ON corrective_actions(sort_order);
 CREATE INDEX IF NOT EXISTS idx_plan_items_section ON plan_items(section, sort_order);

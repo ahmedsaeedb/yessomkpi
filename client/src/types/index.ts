@@ -2,6 +2,7 @@ export type Status = 'active' | 'inactive';
 export type Quarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 export type KpiStatus = 'excellent' | 'on-track' | 'at-risk' | 'behind';
 export type UserRole = 'admin' | 'viewer';
+export type RiskLevel = 'low' | 'medium' | 'high';
 
 export interface User {
   id: number;
@@ -115,20 +116,34 @@ export interface DashboardSummary {
   }>;
   costCenters: Array<{
     id: number;
+    categoryId: number | null;
+    categoryName: string | null;
     item: string;
     amount: number;
-    date: string;
+    dateFrom: string | null;
+    dateTo: string | null;
     year: number;
     quarter: Quarter;
     notes: string | null;
   }>;
 }
 
+export interface CostCenterCategory {
+  id: number;
+  name: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CostCenter {
   id: number;
+  category_id: number | null;
+  category_name?: string | null;
   item: string;
   amount: number;
-  date: string;
+  date_from: string | null;
+  date_to: string | null;
   year: number;
   quarter: Quarter;
   notes: string | null;
@@ -136,7 +151,33 @@ export interface CostCenter {
   updated_at: string;
 }
 
-export type PlanSection = 'general_plan' | 'corrective_actions';
+export interface RoiEntry {
+  id: number;
+  date: string;
+  year: number;
+  quarter: Quarter;
+  channel: string;
+  amount: number;
+  spend: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CorrectiveAction {
+  id: number;
+  risk_type: string;
+  probability: RiskLevel;
+  impact: RiskLevel;
+  risk_level: RiskLevel;
+  treatment: string | null;
+  responsible: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PlanSection = 'general_plan';
 
 export interface PlanItem {
   id: number;

@@ -25,6 +25,12 @@ const QUARTER_LABELS: Record<string, string> = {
   Q4: 'الربع الرابع',
 };
 
+export function formatPeriod(dateFrom: string | null, dateTo: string | null): string {
+  if (!dateFrom && !dateTo) return '—';
+  if (dateFrom && dateTo) return `${formatDate(dateFrom)} - ${formatDate(dateTo)}`;
+  return formatDate(dateFrom ?? dateTo!);
+}
+
 export function quarterLabel(quarter: string): string {
   return QUARTER_LABELS[quarter] ?? quarter;
 }

@@ -24,6 +24,7 @@ import GeneralPlan from '@/pages/GeneralPlan';
 import CorrectiveActions from '@/pages/CorrectiveActions';
 import GeneralPlanView from '@/pages/GeneralPlanView';
 import CorrectiveActionsView from '@/pages/CorrectiveActionsView';
+import ROI from '@/pages/ROI';
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
                       <Route path="/kpis" element={<Kpis />} />
                       <Route path="/quarter-data" element={<QuarterData />} />
                       <Route path="/cost-centers" element={<CostCenters />} />
+                      <Route path="/roi" element={<ROI />} />
                       <Route path="/general-plan-settings" element={<GeneralPlan />} />
                       <Route path="/corrective-actions-settings" element={<CorrectiveActions />} />
                       <Route path="/reports" element={<Reports />} />

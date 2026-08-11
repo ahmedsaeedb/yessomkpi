@@ -35,5 +35,8 @@ function ensureColumn(table: string, column: string, definition: string) {
 }
 
 ensureColumn('settings', 'results_config', 'TEXT');
+ensureColumn('cost_centers', 'category_id', 'INTEGER REFERENCES cost_center_categories(id) ON DELETE SET NULL');
+ensureColumn('cost_centers', 'date_from', 'TEXT');
+ensureColumn('cost_centers', 'date_to', 'TEXT');
 
 export default db;
