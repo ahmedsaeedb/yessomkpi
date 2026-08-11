@@ -138,7 +138,6 @@ CREATE INDEX IF NOT EXISTS idx_kpis_category ON kpis(category_id);
 CREATE INDEX IF NOT EXISTS idx_kpi_values_kpi ON kpi_values(kpi_id);
 CREATE INDEX IF NOT EXISTS idx_kpi_values_year_quarter ON kpi_values(year, quarter);
 CREATE INDEX IF NOT EXISTS idx_cost_centers_year_quarter ON cost_centers(year, quarter);
-CREATE INDEX IF NOT EXISTS idx_cost_centers_category ON cost_centers(category_id);
 CREATE INDEX IF NOT EXISTS idx_roi_entries_year_quarter ON roi_entries(year, quarter);
 CREATE INDEX IF NOT EXISTS idx_corrective_actions_sort ON corrective_actions(sort_order);
 CREATE INDEX IF NOT EXISTS idx_plan_items_section ON plan_items(section, sort_order);

@@ -39,4 +39,8 @@ ensureColumn('cost_centers', 'category_id', 'INTEGER REFERENCES cost_center_cate
 ensureColumn('cost_centers', 'date_from', 'TEXT');
 ensureColumn('cost_centers', 'date_to', 'TEXT');
 
+// Must run after the ensureColumn() calls above: an index on an additively-added
+// column can't be created until that column actually exists on upgraded databases.
+db.exec('CREATE INDEX IF NOT EXISTS idx_cost_centers_category ON cost_centers(category_id)');
+
 export default db;
