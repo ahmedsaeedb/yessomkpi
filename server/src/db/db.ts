@@ -34,10 +34,23 @@ function ensureColumn(table: string, column: string, definition: string) {
   }
 }
 
+/** Drops a column that an older schema version required but the app no longer uses. */
+function ensureColumnDropped(table: string, column: string) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  const exists = columns.some((c) => c.name === column);
+  if (exists) {
+    db.exec(`ALTER TABLE ${table} DROP COLUMN ${column}`);
+  }
+}
+
 ensureColumn('settings', 'results_config', 'TEXT');
 ensureColumn('cost_centers', 'category_id', 'INTEGER REFERENCES cost_center_categories(id) ON DELETE SET NULL');
 ensureColumn('cost_centers', 'date_from', 'TEXT');
 ensureColumn('cost_centers', 'date_to', 'TEXT');
+// Replaced by date_from/date_to. The old column still had a NOT NULL constraint
+// from its original CREATE TABLE, which breaks every insert since the app no
+// longer supplies it.
+ensureColumnDropped('cost_centers', 'date');
 
 // Must run after the ensureColumn() calls above: an index on an additively-added
 // column can't be created until that column actually exists on upgraded databases.
